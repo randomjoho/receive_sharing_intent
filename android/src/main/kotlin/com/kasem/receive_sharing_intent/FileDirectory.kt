@@ -14,6 +14,8 @@ import java.util.*
 import android.webkit.MimeTypeMap
 import android.content.ContentResolver
 import android.media.ThumbnailUtils
+import android.util.Log
+import java.net.URLConnection
 
 
 object FileDirectory {
@@ -35,6 +37,8 @@ object FileDirectory {
         if (isKitKat && DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
+                Log.e("testfile","BBB  urlpath:${uri.path}")
+
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
@@ -45,6 +49,7 @@ object FileDirectory {
 
                 // TODO handle non-primary volumes
             } else if (isDownloadsDocument(uri)) {
+                Log.e("testfile","AAA  urlpath:${uri.path}")
 
                 val id = DocumentsContract.getDocumentId(uri)
                 val contentUri = ContentUris.withAppendedId(
@@ -52,6 +57,8 @@ object FileDirectory {
 
                 return getDataColumn(context, contentUri, null, null)
             } else if (isMediaDocument(uri)) {
+                Log.e("testfile","CCCC  urlpath:${uri.path}")
+
                 val docId = DocumentsContract.getDocumentId(uri)
                 val split = docId.split(":".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
                 val type = split[0]
@@ -70,7 +77,9 @@ object FileDirectory {
                 return getDataColumn(context, contentUri, selection, selectionArgs)
             }// MediaProvider
             // DownloadsProvider
-        } else if ("content".equals(uri.scheme, ignoreCase = true)) {
+        }
+        else if ("content".equals(uri.scheme, ignoreCase = true)) {
+
             return getDataColumn(context, uri, null, null)
         }
 
@@ -90,24 +99,27 @@ object FileDirectory {
     private fun getDataColumn(context: Context, uri: Uri, selection: String?,
                               selectionArgs: Array<String>?): String? {
 
-        if (uri.authority != null) {
-            val mimeType = context.contentResolver.getType(uri)
-            val prefix = with(mimeType ?: "") {
-                when {
-                    startsWith("image") -> "IMG"
-                    startsWith("video") -> "VID"
-                    else -> "FILE"
-                }
-            }
-            val type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
-            val targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
-            context.contentResolver.openInputStream(uri)?.use { input ->
-                FileOutputStream(targetFile).use { fileOut ->
-                    input.copyTo(fileOut)
-                }
-            }
-            return targetFile.path
-        }
+//        if (uri.authority != null) {
+//
+//            val mimeType = context.contentResolver.getType(uri)
+//            Log.e("testfile","urlpath:${uri.path}")
+//            val isImage = mimeType?.startsWith("image") == true
+//            val prefix = if (isImage) "IMG" else "VID"
+//            var type = MimeTypeMap.getSingleton().getExtensionFromMimeType(mimeType)
+////            val targetFile = File(context.cacheDir, "${prefix}_${Date().time}.$type")
+//
+//            var guess =URLConnection.guessContentTypeFromName(uri.path)
+//            Log.e("testfile","guess:${guess}")
+//
+//            var name  = uri.path.split('/').last()
+//            val targetFile = File(context.cacheDir, "${name}")
+//            context.contentResolver.openInputStream(uri)?.use { input ->
+//                FileOutputStream(targetFile).use { fileOut ->
+//                    input.copyTo(fileOut)
+//                }
+//            }
+//            return targetFile.path
+//        }
 
         var cursor: Cursor? = null
         val column = "_data"
